@@ -1,0 +1,36 @@
+@model IEnumerable<CinemaTicketSystemCore.Models.ViewModels.ScreeningViewModel>
+
+@{
+    ViewData["Title"] = "Screenings Management";
+}
+
+<h2>Screenings Management</h2>
+
+<p>
+    <a class="btn btn-primary" asp-controller="Admin" asp-action="CreateScreening">Create New Screening</a>
+</p>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Film Title</th>
+            <th>Cinema</th>
+            <th>Start Date & Time</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var screening in Model)
+        {
+            <tr>
+                <td>@screening.FilmTitle</td>
+                <td>@screening.CinemaName</td>
+                <td>@screening.StartDateTime.ToString("g")</td>
+                <td>
+                    <a class="btn btn-danger btn-sm" asp-controller="Admin" asp-action="DeleteScreening" asp-route-id="@screening.Id">Delete</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+

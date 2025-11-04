@@ -1,0 +1,35 @@
+@model IEnumerable<CinemaTicketSystemCore.Models.ViewModels.ScreeningViewModel>
+
+@{
+    ViewData["Title"] = "Select Screening";
+}
+
+<h2>Select a Screening</h2>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info">
+        <p>No screenings available at the moment.</p>
+    </div>
+}
+else
+{
+    <div class="row">
+        @foreach (var screening in Model)
+        {
+            <div class="col-md-4 mb-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">@screening.FilmTitle</h5>
+                        <p class="card-text">
+                            <strong>Cinema:</strong> @screening.CinemaName<br />
+                            <strong>Date & Time:</strong> @screening.StartDateTime.ToString("g")
+                        </p>
+                        <a class="btn btn-primary" asp-controller="Reservation" asp-action="RoomView" asp-route-id="@screening.Id">View Seats</a>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+

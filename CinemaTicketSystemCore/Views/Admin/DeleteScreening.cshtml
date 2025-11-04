@@ -1,0 +1,31 @@
+@model CinemaTicketSystemCore.Models.Screening
+
+@{
+    ViewData["Title"] = "Confirm Delete Screening";
+}
+
+<h2>Confirm Delete Screening</h2>
+
+<div class="alert alert-warning">
+    <h4>Warning!</h4>
+    <p>You are about to delete the following screening. This action cannot be undone.</p>
+    <p><strong>All reservations for this screening will also be deleted.</strong></p>
+</div>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <h5 class="card-title">@Model.FilmTitle</h5>
+        <p class="card-text">
+            <strong>Cinema:</strong> @Model.Cinema.Name<br />
+            <strong>Date & Time:</strong> @Model.StartDateTime.ToString("g")<br />
+            <strong>Total Reservations:</strong> @Model.SeatReservations.Count
+        </p>
+    </div>
+</div>
+
+<form asp-controller="Admin" asp-action="DeleteScreening" method="post" class="mb-3">
+    <input type="hidden" asp-for="Id" />
+    <button type="submit" class="btn btn-danger">Confirm Delete</button>
+    <a class="btn btn-secondary" asp-controller="Admin" asp-action="ScreeningsList">Cancel</a>
+</form>
+

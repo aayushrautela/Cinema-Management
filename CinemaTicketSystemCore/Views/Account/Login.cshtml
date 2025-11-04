@@ -1,0 +1,55 @@
+@model CinemaTicketSystemCore.Controllers.LoginViewModel
+
+@{
+    ViewData["Title"] = "Login";
+}
+
+<h2>Login</h2>
+
+<form asp-controller="Account" asp-action="Login" method="post" class="form-horizontal" role="form">
+    <div asp-validation-summary="All" class="text-danger"></div>
+    <input type="hidden" name="returnUrl" value="@ViewData["ReturnUrl"]" />
+    <hr />
+    
+    <div class="form-group mb-3">
+        <label asp-for="Email" class="col-md-2 control-label"></label>
+        <div class="col-md-10">
+            <input asp-for="Email" class="form-control" />
+            <span asp-validation-for="Email" class="text-danger"></span>
+        </div>
+    </div>
+    
+    <div class="form-group mb-3">
+        <label asp-for="Password" class="col-md-2 control-label"></label>
+        <div class="col-md-10">
+            <input asp-for="Password" class="form-control" />
+            <span asp-validation-for="Password" class="text-danger"></span>
+        </div>
+    </div>
+    
+    <div class="form-group mb-3">
+        <div class="col-md-offset-2 col-md-10">
+            <div class="checkbox">
+                <label asp-for="RememberMe">
+                    <input asp-for="RememberMe" />
+                    @Html.DisplayNameFor(m => m.RememberMe)
+                </label>
+            </div>
+        </div>
+    </div>
+    
+    <div class="form-group mb-3">
+        <div class="col-md-offset-2 col-md-10">
+            <button type="submit" class="btn btn-primary">Log in</button>
+        </div>
+    </div>
+    
+    <p>
+        <a asp-controller="Account" asp-action="Register">Register as a new user</a>
+    </p>
+</form>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
+

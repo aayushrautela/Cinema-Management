@@ -1,0 +1,40 @@
+@{
+    ViewData["Title"] = "Home";
+}
+
+<div class="jumbotron bg-light p-5 rounded mb-4">
+    <h1 class="display-4">Welcome to Cinema Ticket System</h1>
+    <p class="lead">Book your cinema tickets online easily and conveniently.</p>
+    <hr class="my-4">
+    @if (User.Identity?.IsAuthenticated != true)
+    {
+        <p>Please register or login to start booking tickets.</p>
+        <p class="lead">
+            <a class="btn btn-primary btn-lg" asp-controller="Account" asp-action="Register">Register</a>
+            <a class="btn btn-secondary btn-lg" asp-controller="Account" asp-action="Login">Login</a>
+        </p>
+    }
+    else
+    {
+        <p>Browse available screenings and reserve your seats.</p>
+        <p class="lead">
+            <a class="btn btn-primary btn-lg" asp-controller="Screening" asp-action="SelectScreening">View Screenings</a>
+        </p>
+    }
+</div>
+
+<div class="row">
+    <div class="col-md-4">
+        <h2>Easy Booking</h2>
+        <p>Select your preferred screening and choose your seats with our intuitive seat map.</p>
+    </div>
+    <div class="col-md-4">
+        <h2>Real-time Availability</h2>
+        <p>See which seats are available in real-time and avoid booking conflicts.</p>
+    </div>
+    <div class="col-md-4">
+        <h2>Manage Your Reservations</h2>
+        <p>View and cancel your reservations anytime from your profile.</p>
+    </div>
+</div>
+

@@ -1,0 +1,78 @@
+@model CinemaTicketSystemCore.Controllers.CreateScreeningViewModel
+
+@{
+    ViewData["Title"] = "Create Screening";
+}
+
+<h2>Create New Screening</h2>
+
+<form asp-controller="Admin" asp-action="CreateScreening" method="post" class="form-horizontal" role="form">
+    <div asp-validation-summary="All" class="text-danger"></div>
+    <hr />
+    
+    <div class="form-group mb-3">
+        <label asp-for="CinemaId" class="col-md-2 control-label"></label>
+        <div class="col-md-10">
+            <select asp-for="CinemaId" asp-items="ViewBag.Cinemas" class="form-control">
+                <option value="">Select a Cinema</option>
+            </select>
+            <span asp-validation-for="CinemaId" class="text-danger"></span>
+        </div>
+    </div>
+    
+    <div class="form-group mb-3">
+        <label asp-for="FilmTitle" class="col-md-2 control-label"></label>
+        <div class="col-md-10">
+            <input asp-for="FilmTitle" class="form-control" />
+            <span asp-validation-for="FilmTitle" class="text-danger"></span>
+        </div>
+    </div>
+    
+    <div class="form-group mb-3">
+        <label asp-for="StartDate" class="col-md-2 control-label">Start Date</label>
+        <div class="col-md-10">
+            @{
+                var dateValue = Model?.StartDate == default(DateTime) || Model?.StartDate == null
+                    ? DateTime.Now.ToString("yyyy-MM-dd") 
+                    : Model.StartDate.ToString("yyyy-MM-dd");
+            }
+            <input asp-for="StartDate" 
+                   class="form-control" 
+                   type="date" 
+                   value="@dateValue"
+                   required />
+            <span asp-validation-for="StartDate" class="text-danger"></span>
+        </div>
+    </div>
+    
+    <div class="form-group mb-3">
+        <label asp-for="StartTime" class="col-md-2 control-label">Start Time</label>
+        <div class="col-md-10">
+            @{
+                var timeValue = Model?.StartTime == default(TimeSpan) || Model?.StartTime == null
+                    ? DateTime.Now.ToString("HH:mm") 
+                    : Model.StartTime.ToString(@"HH\:mm");
+            }
+            <input asp-for="StartTime" 
+                   class="form-control" 
+                   type="time" 
+                   value="@timeValue"
+                   step="60"
+                   required />
+            <span asp-validation-for="StartTime" class="text-danger"></span>
+            <small class="form-text text-muted">Select the time for the screening</small>
+        </div>
+    </div>
+    
+    <div class="form-group mb-3">
+        <div class="col-md-offset-2 col-md-10">
+            <button type="submit" class="btn btn-primary">Create Screening</button>
+            <a class="btn btn-secondary" asp-controller="Admin" asp-action="ScreeningsList">Cancel</a>
+        </div>
+    </div>
+</form>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
+

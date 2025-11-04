@@ -1,0 +1,103 @@
+@model CinemaTicketSystemCore.Models.ViewModels.RoomViewModel
+
+@{
+    ViewData["Title"] = "Room View";
+    
+    // Helper function to convert row number to letter (1->A, 2->B, etc.)
+    string GetRowLetter(int rowNumber)
+    {
+        return ((char)('A' + rowNumber - 1)).ToString();
+    }
+}
+
+<h2>@Model.FilmTitle</h2>
+<p><strong>Cinema:</strong> @Model.CinemaName | <strong>Date & Time:</strong> @Model.StartDateTime.ToString("g")</p>
+
+<div class="mb-4">
+    <h4>Screen</h4>
+    <div class="bg-dark text-white text-center p-3 rounded mb-3">
+        <strong>SCREEN</strong>
+    </div>
+</div>
+
+<div class="mb-3">
+    <h4>Seat Map</h4>
+    
+    <div class="seat-map-wrapper">
+        <!-- Column Headers -->
+        <div class="seat-map-header-row">
+            <div class="row-label-header"></div>
+            <div class="column-headers">
+                @for (int seat = 1; seat <= Model.SeatsPerRow; seat++)
+                {
+                    <div class="column-header">@seat</div>
+                }
+            </div>
+        </div>
+        
+        <!-- Seat Rows -->
+        @for (int row = 1; row <= Model.Rows; row++)
+        {
+            string rowLetter = GetRowLetter(row);
+            <div class="seat-map-row">
+                <div class="row-label">
+                    <strong>@rowLetter</strong>
+                </div>
+                <div class="seat-row">
+                    @for (int seat = 1; seat <= Model.SeatsPerRow; seat++)
+                    {
+                        string key = $"{row}_{seat}";
+                        bool isReserved = Model.IsSeatReserved(row, seat);
+                        bool isOwnedByUser = Model.IsSeatOwnedByUser(row, seat);
+                        
+                        <div class="seat-cell">
+                            @if (isReserved)
+                            {
+                                if (isOwnedByUser)
+                                {
+                                    <form asp-controller="Reservation" asp-action="ReleaseSeat" method="post" class="seat-form">
+                                        <input type="hidden" name="screeningId" value="@Model.ScreeningId" />
+                                        <input type="hidden" name="rowNumber" value="@row" />
+                                        <input type="hidden" name="seatNumber" value="@seat" />
+                                        <button type="submit" class="btn btn-warning btn-sm seat-button" title="Your reservation - Click to cancel">
+                                            @rowLetter@seat
+                                        </button>
+                                    </form>
+                                }
+                                else
+                                {
+                                    <button type="button" class="btn btn-danger btn-sm seat-button disabled" title="Reserved">
+                                        @rowLetter@seat
+                                    </button>
+                                }
+                            }
+                            else
+                            {
+                                <form asp-controller="Reservation" asp-action="ReserveSeat" method="post" class="seat-form">
+                                    <input type="hidden" name="screeningId" value="@Model.ScreeningId" />
+                                    <input type="hidden" name="rowNumber" value="@row" />
+                                    <input type="hidden" name="seatNumber" value="@seat" />
+                                    <button type="submit" class="btn btn-success btn-sm seat-button" title="Available - Click to reserve">
+                                        @rowLetter@seat
+                                    </button>
+                                </form>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<div class="mb-4">
+    <h5>Legend:</h5>
+    <button type="button" class="btn btn-success btn-sm disabled">Available</button>
+    <button type="button" class="btn btn-danger btn-sm disabled">Reserved</button>
+    <button type="button" class="btn btn-warning btn-sm disabled">Your Reservation</button>
+</div>
+
+<div class="mt-4">
+    <a class="btn btn-secondary" asp-controller="Screening" asp-action="SelectScreening">Back to Screenings</a>
+</div>
+
