@@ -19,7 +19,7 @@ else
                 <th>Name</th>
                 <th>Surname</th>
                 <th>Phone</th>
-                <th></th>
+                <th class="text-end">Actions</th>
             </tr>
         </thead>
         <tbody>
@@ -31,6 +31,7 @@ else
                 <td>@u.Surname</td>
                 <td>@u.PhoneNumber</td>
                 <td class="text-end">
+                    <a class="btn btn-sm btn-outline-primary me-2" asp-controller="Account" asp-action="EditUser" asp-route-id="@u.Id">Edit</a>
                     <a class="btn btn-sm btn-outline-danger" asp-controller="Admin" asp-action="DeleteUser" asp-route-id="@u.Id">Delete</a>
                 </td>
             </tr>

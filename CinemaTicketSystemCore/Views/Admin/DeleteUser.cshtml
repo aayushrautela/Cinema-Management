@@ -26,9 +26,9 @@
 
 <form asp-controller="Admin" asp-action="DeleteUser" method="post">
     <input type="hidden" name="id" value="@Model.Id" />
+    @Html.AntiForgeryToken()
     <button type="submit" class="btn btn-danger">Confirm Delete</button>
     <a asp-controller="Admin" asp-action="UsersList" class="btn btn-secondary">Cancel</a>
-    <input name="__RequestVerificationToken" type="hidden" value="@Antiforgery.GetAndStoreTokens(HttpContext).RequestToken" />
 </form>
 
 
