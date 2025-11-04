@@ -1,0 +1,34 @@
+@model CinemaTicketSystemCore.Controllers.DeleteUserViewModel
+
+@{
+    ViewData["Title"] = "Delete User";
+}
+
+<h2>Delete User</h2>
+
+<div class="alert alert-warning">
+    <strong>Warning:</strong> This action will permanently delete the user and remove @Model.ReservationCount reservation(s) belonging to this user.
+    This cannot be undone.
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="mt-2 alert alert-danger">@TempData["ErrorMessage"]</div>
+    }
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="mt-2 alert alert-success">@TempData["SuccessMessage"]</div>
+    }
+    <div class="mt-2">
+        <div><strong>Email:</strong> @Model.Email</div>
+        <div><strong>Name:</strong> @Model.Name @Model.Surname</div>
+        <div><strong>Phone:</strong> @Model.PhoneNumber</div>
+    </div>
+</div>
+
+<form asp-controller="Admin" asp-action="DeleteUser" method="post">
+    <input type="hidden" name="id" value="@Model.Id" />
+    <button type="submit" class="btn btn-danger">Confirm Delete</button>
+    <a asp-controller="Admin" asp-action="UsersList" class="btn btn-secondary">Cancel</a>
+    <input name="__RequestVerificationToken" type="hidden" value="@Antiforgery.GetAndStoreTokens(HttpContext).RequestToken" />
+</form>
+
+

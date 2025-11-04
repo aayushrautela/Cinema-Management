@@ -1,0 +1,42 @@
+@model IEnumerable<CinemaTicketSystemCore.Controllers.UserSummaryViewModel>
+
+@{
+    ViewData["Title"] = "Users";
+}
+
+<h2>Users</h2>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info">No users found.</div>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Email</th>
+                <th>Name</th>
+                <th>Surname</th>
+                <th>Phone</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+        @foreach (var u in Model)
+        {
+            <tr>
+                <td>@u.Email</td>
+                <td>@u.Name</td>
+                <td>@u.Surname</td>
+                <td>@u.PhoneNumber</td>
+                <td class="text-end">
+                    <a class="btn btn-sm btn-outline-danger" asp-controller="Admin" asp-action="DeleteUser" asp-route-id="@u.Id">Delete</a>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+}
+
+

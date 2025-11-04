@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity;
 
 namespace CinemaTicketSystemCore.Controllers
 {
@@ -15,10 +16,12 @@ namespace CinemaTicketSystemCore.Controllers
     public class AdminController : Controller
     {
         private readonly ApplicationDbContext _db;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        public AdminController(ApplicationDbContext db)
+        public AdminController(ApplicationDbContext db, UserManager<ApplicationUser> userManager)
         {
             _db = db;
+            _userManager = userManager;
         }
 
         [HttpGet]
@@ -127,6 +130,86 @@ namespace CinemaTicketSystemCore.Controllers
             TempData["SuccessMessage"] = $"Screening '{screening.FilmTitle}' has been deleted successfully. All reservations for this screening have been removed.";
             return RedirectToAction("ScreeningsList");
         }
+
+        [HttpGet]
+        public async Task<IActionResult> UsersList()
+        {
+            var users = await _db.Users
+                .OrderBy(u => u.Email)
+                .Select(u => new UserSummaryViewModel
+                {
+                    Id = u.Id,
+                    Email = u.Email ?? string.Empty,
+                    Name = u.Name,
+                    Surname = u.Surname,
+                    PhoneNumber = u.PhoneNumber
+                })
+                .ToListAsync();
+
+            return View(users);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> DeleteUser(string id)
+        {
+            if (string.IsNullOrWhiteSpace(id))
+            {
+                return NotFound();
+            }
+
+            var user = await _db.Users.FirstOrDefaultAsync(u => u.Id == id);
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            var reservationCount = await _db.SeatReservations.CountAsync(r => r.UserId == id);
+
+            var vm = new DeleteUserViewModel
+            {
+                Id = user.Id,
+                Email = user.Email ?? string.Empty,
+                Name = user.Name,
+                Surname = user.Surname,
+                PhoneNumber = user.PhoneNumber,
+                ReservationCount = reservationCount
+            };
+
+            return View(vm);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [ActionName("DeleteUser")]
+        public async Task<IActionResult> DeleteUserConfirmed(string id)
+        {
+            if (string.IsNullOrWhiteSpace(id))
+            {
+                return NotFound();
+            }
+
+            var user = await _db.Users.FirstOrDefaultAsync(u => u.Id == id);
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            // Remove user's reservations first to satisfy FK restriction
+            var reservations = _db.SeatReservations.Where(r => r.UserId == id);
+            _db.SeatReservations.RemoveRange(reservations);
+            await _db.SaveChangesAsync();
+
+            // Delete the user using UserManager to ensure Identity cleanup
+            var result = await _userManager.DeleteAsync(user);
+            if (!result.Succeeded)
+            {
+                TempData["ErrorMessage"] = string.Join("; ", result.Errors.Select(e => e.Description));
+                return RedirectToAction("DeleteUser", new { id });
+            }
+
+            TempData["SuccessMessage"] = $"User '{user.Email}' deleted.";
+            return RedirectToAction("UsersList");
+        }
     }
 
     public class CreateScreeningViewModel
@@ -149,6 +232,25 @@ namespace CinemaTicketSystemCore.Controllers
         [System.ComponentModel.DataAnnotations.Display(Name = "Start Time")]
         [System.ComponentModel.DataAnnotations.DataType(System.ComponentModel.DataAnnotations.DataType.Time)]
         public TimeSpan StartTime { get; set; }
+    }
+
+    public class UserSummaryViewModel
+    {
+        public string Id { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
+        public string Surname { get; set; } = string.Empty;
+        public string? PhoneNumber { get; set; }
+    }
+
+    public class DeleteUserViewModel
+    {
+        public string Id { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
+        public string Surname { get; set; } = string.Empty;
+        public string? PhoneNumber { get; set; }
+        public int ReservationCount { get; set; }
     }
 }
 
