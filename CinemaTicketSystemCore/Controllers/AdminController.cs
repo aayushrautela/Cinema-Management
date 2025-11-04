@@ -146,6 +146,22 @@ namespace CinemaTicketSystemCore.Controllers
                 })
                 .ToListAsync();
 
+            // Determine which users are admins
+            var adminRoleId = await _db.Roles.Where(r => r.Name == "Admin").Select(r => r.Id).FirstOrDefaultAsync();
+            if (!string.IsNullOrEmpty(adminRoleId))
+            {
+                var adminUserIds = await _db.UserRoles
+                    .Where(ur => ur.RoleId == adminRoleId)
+                    .Select(ur => ur.UserId)
+                    .ToListAsync();
+
+                var adminSet = new HashSet<string>(adminUserIds);
+                foreach (var u in users)
+                {
+                    u.IsAdmin = adminSet.Contains(u.Id);
+                }
+            }
+
             return View(users);
         }
 
@@ -241,6 +257,7 @@ namespace CinemaTicketSystemCore.Controllers
         public string Name { get; set; } = string.Empty;
         public string Surname { get; set; } = string.Empty;
         public string? PhoneNumber { get; set; }
+        public bool IsAdmin { get; set; }
     }
 
     public class DeleteUserViewModel

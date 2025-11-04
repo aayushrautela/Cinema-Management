@@ -148,6 +148,16 @@ namespace CinemaTicketSystemCore.Controllers
                         return Forbid();
                     }
 
+                    // Prevent admins from editing other admins
+                    if (isAdmin && user.Id != currentUserId)
+                    {
+                        var targetIsAdmin = await _userManager.IsInRoleAsync(user, "Admin");
+                        if (targetIsAdmin)
+                        {
+                            return Forbid();
+                        }
+                    }
+
                     // Optimistic concurrency check
                     if (user.LockVersion != null && model.LockVersion != null)
                     {
@@ -162,8 +172,7 @@ namespace CinemaTicketSystemCore.Controllers
                     user.Name = model.Name;
                     user.Surname = model.Surname;
                     user.PhoneNumber = model.PhoneNumber;
-                    user.Email = model.Email;
-                    user.UserName = model.Email;
+                    // Do NOT allow changing email/username here; they remain as-registered
 
                     _db.Entry(user).State = EntityState.Modified;
                     await _db.SaveChangesAsync();

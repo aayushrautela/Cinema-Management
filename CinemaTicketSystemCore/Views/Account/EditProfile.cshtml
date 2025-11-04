@@ -32,8 +32,8 @@
     <div class="form-group mb-3">
         <label asp-for="Email" class="col-md-2 control-label"></label>
         <div class="col-md-10">
-            <input asp-for="Email" class="form-control" />
-            <span asp-validation-for="Email" class="text-danger"></span>
+            <input asp-for="Email" class="form-control" readonly />
+            <span class="form-text text-muted">Email cannot be changed.</span>
         </div>
     </div>
     
