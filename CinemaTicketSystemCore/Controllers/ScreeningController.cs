@@ -21,10 +21,13 @@ namespace CinemaTicketSystemCore.Controllers
         [HttpGet]
         public async Task<IActionResult> SelectScreening()
         {
+            var now = DateTime.Now;
+
             var screenings = await _db.Screenings
                 .Include(s => s.Cinema)
-                .Where(s => s.StartDateTime > DateTime.Now)
-                .OrderBy(s => s.StartDateTime)
+                // Future first (isPast = false), then past (isPast = true), then by time
+                .OrderBy(s => s.StartDateTime <= now)
+                .ThenBy(s => s.StartDateTime)
                 .Select(s => new ScreeningViewModel
                 {
                     Id = s.Id,

@@ -107,3 +107,11 @@ footer {
     box-sizing: border-box !important;
 }
 
+/* Past screenings displayed de-emphasized */
+.screening-card.past {
+    opacity: 0.55;
+}
+.screening-card.past .btn {
+    pointer-events: none;
+}
+
