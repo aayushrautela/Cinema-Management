@@ -135,7 +135,7 @@ namespace CinemaTicketSystemCore.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> ReleaseSeat(int screeningId, int rowNumber, int seatNumber)
+        public async Task<IActionResult> ReleaseSeat(int screeningId, int rowNumber, int seatNumber, string returnUrl = null)
         {
             var userId = _userManager.GetUserId(User);
             if (userId == null)
@@ -152,14 +152,14 @@ namespace CinemaTicketSystemCore.Controllers
             if (reservation == null)
             {
                 TempData["ErrorMessage"] = "Reservation not found or you don't have permission to cancel it.";
-                return RedirectToAction("RoomView", new { id = screeningId });
+                return Redirect(returnUrl ?? Url.Action("RoomView", new { id = screeningId }));
             }
 
             _db.SeatReservations.Remove(reservation);
             await _db.SaveChangesAsync();
 
             TempData["SuccessMessage"] = $"Seat {rowNumber}-{seatNumber} reservation cancelled.";
-            return RedirectToAction("RoomView", new { id = screeningId });
+            return Redirect(returnUrl ?? Url.Action("RoomView", new { id = screeningId }));
         }
     }
 }

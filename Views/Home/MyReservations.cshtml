@@ -1,0 +1,72 @@
+@model IEnumerable<CinemaTicketSystemCore.Models.SeatReservation>
+@{
+    ViewData["Title"] = "My Reservations";
+}
+
+<h2>My Reservations</h2>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+}
+
+@if (Model == null || !Model.Any())
+{
+    <div class="alert alert-info">
+        <p>You don't have any reservations yet.</p>
+        <a class="btn btn-primary" asp-controller="Screening" asp-action="SelectScreening">View Screenings</a>
+    </div>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Film</th>
+                    <th>Cinema</th>
+                    <th>Date & Time</th>
+                    <th>Seat</th>
+                    <th>Reserved At</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var reservation in Model)
+                {
+                    <tr>
+                        <td>@reservation.Screening.FilmTitle</td>
+                        <td>@reservation.Screening.Cinema.Name</td>
+                        <td>@reservation.Screening.StartDateTime.ToString("yyyy-MM-dd HH:mm")</td>
+                        <td>Row @GetRowLetter(reservation.RowNumber)@reservation.SeatNumber</td>
+                        <td>@reservation.ReservedAt.ToString("yyyy-MM-dd HH:mm")</td>
+                        <td>
+                            <form asp-controller="Reservation" asp-action="ReleaseSeat" method="post" style="display: inline;">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="screeningId" value="@reservation.ScreeningId" />
+                                <input type="hidden" name="rowNumber" value="@reservation.RowNumber" />
+                                <input type="hidden" name="seatNumber" value="@reservation.SeatNumber" />
+                                <input type="hidden" name="returnUrl" value="@Url.Action("MyReservations", "Home")" />
+                                <button type="submit" class="btn btn-warning btn-sm" onclick="return confirm('Are you sure you want to cancel this reservation?');">
+                                    Cancel
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+@functions {
+    private string GetRowLetter(int rowNumber)
+    {
+        return ((char)('A' + rowNumber - 1)).ToString();
+    }
+}
