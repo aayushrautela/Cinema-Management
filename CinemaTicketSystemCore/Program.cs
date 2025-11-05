@@ -75,8 +75,11 @@ using (var scope = app.Services.CreateScope())
         // Ensure database is created
         context.Database.EnsureCreated();
         
+        // Check if test data should be seeded
+        var seedTestData = builder.Configuration.GetValue<bool>("SeedTestData", false);
+        
         // Seed data
-        DatabaseInitializer.Seed(context, userManager, roleManager);
+        DatabaseInitializer.Seed(context, userManager, roleManager, seedTestData);
     }
     catch (Exception ex)
     {

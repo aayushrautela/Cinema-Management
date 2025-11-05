@@ -5,7 +5,7 @@ namespace CinemaTicketSystemCore.Data
 {
     public static class DatabaseInitializer
     {
-        public static void Seed(ApplicationDbContext context, UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager)
+        public static void Seed(ApplicationDbContext context, UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager, bool seedTestData = false)
         {
             // Seed Cinemas
             if (!context.Cinemas.Any())
@@ -45,84 +45,88 @@ namespace CinemaTicketSystemCore.Data
                 }
             }
 
-            // Create test users (10 regular users + 2 admins)
-            var testUsers = new List<(string email, string password, string name, string surname, string phone, bool isAdmin)>
+            // Only seed test data if enabled
+            if (seedTestData)
             {
-                // Regular users
-                ("user001@test.com", "Test@123", "User", "001", "1111111111", false),
-                ("user002@test.com", "Test@123", "User", "002", "1111111112", false),
-                ("user003@test.com", "Test@123", "User", "003", "1111111113", false),
-                ("user004@test.com", "Test@123", "User", "004", "1111111114", false),
-                ("user005@test.com", "Test@123", "User", "005", "1111111115", false),
-                ("user006@test.com", "Test@123", "User", "006", "1111111116", false),
-                ("user007@test.com", "Test@123", "User", "007", "1111111117", false),
-                ("user008@test.com", "Test@123", "User", "008", "1111111118", false),
-                ("user009@test.com", "Test@123", "User", "009", "1111111119", false),
-                ("user010@test.com", "Test@123", "User", "010", "1111111120", false),
-                // Admin users
-                ("admin001@test.com", "Admin@123", "Admin", "001", "2222222221", true),
-                ("admin002@test.com", "Admin@123", "Admin", "002", "2222222222", true)
-            };
-
-            foreach (var (email, password, name, surname, phone, isAdmin) in testUsers)
-            {
-                // Check if user already exists
-                if (userManager.FindByEmailAsync(email).Result == null)
+                // Create test users (10 regular users + 2 admins)
+                var testUsers = new List<(string email, string password, string name, string surname, string phone, bool isAdmin)>
                 {
-                    var user = new ApplicationUser
+                    // Regular users
+                    ("user001@test.com", "Test@123", "User", "001", "1111111111", false),
+                    ("user002@test.com", "Test@123", "User", "002", "1111111112", false),
+                    ("user003@test.com", "Test@123", "User", "003", "1111111113", false),
+                    ("user004@test.com", "Test@123", "User", "004", "1111111114", false),
+                    ("user005@test.com", "Test@123", "User", "005", "1111111115", false),
+                    ("user006@test.com", "Test@123", "User", "006", "1111111116", false),
+                    ("user007@test.com", "Test@123", "User", "007", "1111111117", false),
+                    ("user008@test.com", "Test@123", "User", "008", "1111111118", false),
+                    ("user009@test.com", "Test@123", "User", "009", "1111111119", false),
+                    ("user010@test.com", "Test@123", "User", "010", "1111111120", false),
+                    // Admin users
+                    ("admin001@test.com", "Admin@123", "Admin", "001", "2222222221", true),
+                    ("admin002@test.com", "Admin@123", "Admin", "002", "2222222222", true)
+                };
+
+                foreach (var (email, password, name, surname, phone, isAdmin) in testUsers)
+                {
+                    // Check if user already exists
+                    if (userManager.FindByEmailAsync(email).Result == null)
                     {
-                        UserName = email,
-                        Email = email,
-                        Name = name,
-                        Surname = surname,
-                        PhoneNumber = phone
-                    };
-                    
-                    var result = userManager.CreateAsync(user, password).Result;
-                    if (result.Succeeded && isAdmin)
-                    {
-                        userManager.AddToRoleAsync(user, "Admin").Wait();
+                        var user = new ApplicationUser
+                        {
+                            UserName = email,
+                            Email = email,
+                            Name = name,
+                            Surname = surname,
+                            PhoneNumber = phone
+                        };
+                        
+                        var result = userManager.CreateAsync(user, password).Result;
+                        if (result.Succeeded && isAdmin)
+                        {
+                            userManager.AddToRoleAsync(user, "Admin").Wait();
+                        }
                     }
                 }
-            }
 
-            // Create test screenings
-            var cinemas = context.Cinemas.ToList();
-            if (cinemas.Any() && !context.Screenings.Any())
-            {
-                var baseDate = DateTime.Now.Date.AddDays(1); // Start from tomorrow
-                var screenings = new List<Screening>();
-                
-                // Screenings for Grand Cinema (Id = 1)
-                screenings.Add(new Screening { CinemaId = cinemas[0].Id, FilmTitle = "Action Hero", StartDateTime = baseDate.AddHours(14) });
-                screenings.Add(new Screening { CinemaId = cinemas[0].Id, FilmTitle = "Action Hero", StartDateTime = baseDate.AddHours(18) });
-                screenings.Add(new Screening { CinemaId = cinemas[0].Id, FilmTitle = "Space Adventure", StartDateTime = baseDate.AddHours(20) });
-                
-                // Screenings for City Theater (Id = 2)
-                screenings.Add(new Screening { CinemaId = cinemas[1].Id, FilmTitle = "Drama Queen", StartDateTime = baseDate.AddHours(15) });
-                screenings.Add(new Screening { CinemaId = cinemas[1].Id, FilmTitle = "Mystery Night", StartDateTime = baseDate.AddHours(19) });
-                
-                // Screenings for Metro Multiplex (Id = 3)
-                screenings.Add(new Screening { CinemaId = cinemas[2].Id, FilmTitle = "Comedy Hour", StartDateTime = baseDate.AddHours(13) });
-                screenings.Add(new Screening { CinemaId = cinemas[2].Id, FilmTitle = "Thriller Time", StartDateTime = baseDate.AddHours(17) });
-                screenings.Add(new Screening { CinemaId = cinemas[2].Id, FilmTitle = "Sci-Fi Chronicles", StartDateTime = baseDate.AddHours(21) });
-                
-                // Screenings for Arts Center (Id = 4)
-                screenings.Add(new Screening { CinemaId = cinemas[3].Id, FilmTitle = "Classic Film", StartDateTime = baseDate.AddHours(16) });
-                screenings.Add(new Screening { CinemaId = cinemas[3].Id, FilmTitle = "Indie Story", StartDateTime = baseDate.AddHours(20) });
-                
-                // Screenings for Mega Screen (Id = 5)
-                screenings.Add(new Screening { CinemaId = cinemas[4].Id, FilmTitle = "Blockbuster Movie", StartDateTime = baseDate.AddHours(14) });
-                screenings.Add(new Screening { CinemaId = cinemas[4].Id, FilmTitle = "Superhero Saga", StartDateTime = baseDate.AddHours(18) });
-                screenings.Add(new Screening { CinemaId = cinemas[4].Id, FilmTitle = "Epic Journey", StartDateTime = baseDate.AddDays(1).AddHours(16) });
-                
-                // Add some screenings for the day after tomorrow
-                var dayAfter = baseDate.AddDays(1);
-                screenings.Add(new Screening { CinemaId = cinemas[0].Id, FilmTitle = "Action Hero", StartDateTime = dayAfter.AddHours(14) });
-                screenings.Add(new Screening { CinemaId = cinemas[1].Id, FilmTitle = "New Release", StartDateTime = dayAfter.AddHours(18) });
-                screenings.Add(new Screening { CinemaId = cinemas[2].Id, FilmTitle = "Horror Night", StartDateTime = dayAfter.AddHours(20) });
-                
-                context.Screenings.AddRange(screenings);
+                // Create test screenings
+                var cinemas = context.Cinemas.ToList();
+                if (cinemas.Any() && !context.Screenings.Any())
+                {
+                    var baseDate = DateTime.Now.Date.AddDays(1); // Start from tomorrow
+                    var screenings = new List<Screening>();
+                    
+                    // Screenings for Grand Cinema (Id = 1)
+                    screenings.Add(new Screening { CinemaId = cinemas[0].Id, FilmTitle = "Action Hero", StartDateTime = baseDate.AddHours(14) });
+                    screenings.Add(new Screening { CinemaId = cinemas[0].Id, FilmTitle = "Action Hero", StartDateTime = baseDate.AddHours(18) });
+                    screenings.Add(new Screening { CinemaId = cinemas[0].Id, FilmTitle = "Space Adventure", StartDateTime = baseDate.AddHours(20) });
+                    
+                    // Screenings for City Theater (Id = 2)
+                    screenings.Add(new Screening { CinemaId = cinemas[1].Id, FilmTitle = "Drama Queen", StartDateTime = baseDate.AddHours(15) });
+                    screenings.Add(new Screening { CinemaId = cinemas[1].Id, FilmTitle = "Mystery Night", StartDateTime = baseDate.AddHours(19) });
+                    
+                    // Screenings for Metro Multiplex (Id = 3)
+                    screenings.Add(new Screening { CinemaId = cinemas[2].Id, FilmTitle = "Comedy Hour", StartDateTime = baseDate.AddHours(13) });
+                    screenings.Add(new Screening { CinemaId = cinemas[2].Id, FilmTitle = "Thriller Time", StartDateTime = baseDate.AddHours(17) });
+                    screenings.Add(new Screening { CinemaId = cinemas[2].Id, FilmTitle = "Sci-Fi Chronicles", StartDateTime = baseDate.AddHours(21) });
+                    
+                    // Screenings for Arts Center (Id = 4)
+                    screenings.Add(new Screening { CinemaId = cinemas[3].Id, FilmTitle = "Classic Film", StartDateTime = baseDate.AddHours(16) });
+                    screenings.Add(new Screening { CinemaId = cinemas[3].Id, FilmTitle = "Indie Story", StartDateTime = baseDate.AddHours(20) });
+                    
+                    // Screenings for Mega Screen (Id = 5)
+                    screenings.Add(new Screening { CinemaId = cinemas[4].Id, FilmTitle = "Blockbuster Movie", StartDateTime = baseDate.AddHours(14) });
+                    screenings.Add(new Screening { CinemaId = cinemas[4].Id, FilmTitle = "Superhero Saga", StartDateTime = baseDate.AddHours(18) });
+                    screenings.Add(new Screening { CinemaId = cinemas[4].Id, FilmTitle = "Epic Journey", StartDateTime = baseDate.AddDays(1).AddHours(16) });
+                    
+                    // Add some screenings for the day after tomorrow
+                    var dayAfter = baseDate.AddDays(1);
+                    screenings.Add(new Screening { CinemaId = cinemas[0].Id, FilmTitle = "Action Hero", StartDateTime = dayAfter.AddHours(14) });
+                    screenings.Add(new Screening { CinemaId = cinemas[1].Id, FilmTitle = "New Release", StartDateTime = dayAfter.AddHours(18) });
+                    screenings.Add(new Screening { CinemaId = cinemas[2].Id, FilmTitle = "Horror Night", StartDateTime = dayAfter.AddHours(20) });
+                    
+                    context.Screenings.AddRange(screenings);
+                }
             }
 
             context.SaveChanges();
