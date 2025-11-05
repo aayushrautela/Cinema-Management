@@ -8,8 +8,14 @@ DB_NAME="CinemaDB"
 
 echo "Setting up MySQL..."
 
-# Start MySQL if not running
-sudo systemctl start mysqld 2>/dev/null || true
+# Install MySQL if not installed
+echo "Installing MySQL server..."
+sudo dnf install -y mysql-server
+
+# Start MySQL service
+echo "Starting MySQL service..."
+sudo systemctl start mysqld
+sudo systemctl enable mysqld
 
 # Try to set root password (works if MySQL has no password or uses sudo)
 echo "Setting MySQL root password to 'coolpass'..."
@@ -28,9 +34,33 @@ EOF
 
 # Create database
 echo "Creating database..."
-mysql -u root -p"${MYSQL_PASSWORD}" <<EOF 2>/dev/null || sudo mysql -u root -p"${MYSQL_PASSWORD}" <<EOF
+if mysql -u root -p"${MYSQL_PASSWORD}" <<EOF 2>/dev/null
 CREATE DATABASE IF NOT EXISTS ${DB_NAME} CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 EOF
+then
+    echo "Database created successfully"
+else
+    sudo mysql <<EOF
+CREATE DATABASE IF NOT EXISTS ${DB_NAME} CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+EOF
+fi
+
+# Create database user
+echo "Creating database user..."
+if mysql -u root -p"${MYSQL_PASSWORD}" <<EOF 2>/dev/null
+CREATE USER IF NOT EXISTS 'cinemauser'@'localhost' IDENTIFIED BY '${MYSQL_PASSWORD}';
+GRANT ALL PRIVILEGES ON ${DB_NAME}.* TO 'cinemauser'@'localhost';
+FLUSH PRIVILEGES;
+EOF
+then
+    echo "User created successfully"
+else
+    sudo mysql <<EOF
+CREATE USER IF NOT EXISTS 'cinemauser'@'localhost' IDENTIFIED BY '${MYSQL_PASSWORD}';
+GRANT ALL PRIVILEGES ON ${DB_NAME}.* TO 'cinemauser'@'localhost';
+FLUSH PRIVILEGES;
+EOF
+fi
 
 # Update appsettings.json
 echo "Updating appsettings.json..."
