@@ -24,44 +24,78 @@
 }
 else
 {
-    <div class="table-responsive">
-        <table class="table table-striped">
-            <thead>
-                <tr>
-                    <th>Film</th>
-                    <th>Cinema</th>
-                    <th>Date & Time</th>
-                    <th>Seat</th>
-                    <th>Reserved At</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var reservation in Model)
-                {
-                    <tr>
-                        <td>@reservation.Screening.FilmTitle</td>
-                        <td>@reservation.Screening.Cinema.Name</td>
-                        <td>@reservation.Screening.StartDateTime.ToString("yyyy-MM-dd HH:mm")</td>
-                        <td>Row @GetRowLetter(reservation.RowNumber)@reservation.SeatNumber</td>
-                        <td>@reservation.ReservedAt.ToString("yyyy-MM-dd HH:mm")</td>
-                        <td>
-                            <form asp-controller="Reservation" asp-action="ReleaseSeat" method="post" style="display: inline;">
+    var groupedReservations = Model.GroupBy(r => r.ScreeningId);
+    
+    @foreach (var screeningGroup in groupedReservations)
+    {
+        var firstReservation = screeningGroup.First();
+        var screening = firstReservation.Screening;
+        
+        // Group seats by row within this screening
+        var seatsByRow = screeningGroup.GroupBy(r => r.RowNumber)
+            .OrderBy(g => g.Key)
+            .Select(g => new {
+                RowNumber = g.Key,
+                RowLetter = GetRowLetter(g.Key),
+                Seats = g.OrderBy(r => r.SeatNumber).Select(r => r.SeatNumber).ToList(),
+                Reservations = g.ToList()
+            }).ToList();
+        
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">@screening.FilmTitle</h5>
+                <small class="text-muted">@screening.Cinema.Name - @screening.StartDateTime.ToString("yyyy-MM-dd HH:mm")</small>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-8">
+                        <h6>Seats:</h6>
+                        <p>
+                            @foreach (var rowGroup in seatsByRow)
+                            {
+                                <span class="badge bg-secondary me-2">
+                                    Row @rowGroup.RowLetter: @string.Join(", ", rowGroup.Seats.Select(s => rowGroup.RowLetter + s.ToString()))
+                                </span>
+                            }
+                        </p>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <div class="mb-2">
+                            <a class="btn btn-primary btn-sm" asp-controller="Reservation" asp-action="RoomView" asp-route-id="@screening.Id">
+                                Edit Seats
+                            </a>
+                            <form asp-controller="Reservation" asp-action="CancelAll" method="post" style="display: inline;">
                                 @Html.AntiForgeryToken()
-                                <input type="hidden" name="screeningId" value="@reservation.ScreeningId" />
-                                <input type="hidden" name="rowNumber" value="@reservation.RowNumber" />
-                                <input type="hidden" name="seatNumber" value="@reservation.SeatNumber" />
+                                <input type="hidden" name="screeningId" value="@screening.Id" />
                                 <input type="hidden" name="returnUrl" value="@Url.Action("MyReservations", "Home")" />
-                                <button type="submit" class="btn btn-warning btn-sm" onclick="return confirm('Are you sure you want to cancel this reservation?');">
-                                    Cancel
+                                <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Cancel all reservations for this screening?');">
+                                    Cancel All
                                 </button>
                             </form>
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-    </div>
+                        </div>
+                        <div>
+                            @foreach (var rowGroup in seatsByRow)
+                            {
+                                @foreach (var reservation in rowGroup.Reservations)
+                                {
+                                    <form asp-controller="Reservation" asp-action="ReleaseSeat" method="post" style="display: inline-block; margin: 2px;">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="screeningId" value="@reservation.ScreeningId" />
+                                        <input type="hidden" name="rowNumber" value="@reservation.RowNumber" />
+                                        <input type="hidden" name="seatNumber" value="@reservation.SeatNumber" />
+                                        <input type="hidden" name="returnUrl" value="@Url.Action("MyReservations", "Home")" />
+                                        <button type="submit" class="btn btn-warning btn-sm" style="font-size: 0.75rem; padding: 0.15rem 0.5rem;" onclick="return confirm('Cancel seat @GetRowLetter(reservation.RowNumber)@reservation.SeatNumber?');">
+                                            Cancel @GetRowLetter(reservation.RowNumber)@reservation.SeatNumber
+                                        </button>
+                                    </form>
+                                }
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
 }
 
 @functions {

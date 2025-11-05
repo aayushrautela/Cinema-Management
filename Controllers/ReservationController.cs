@@ -135,7 +135,7 @@ namespace CinemaTicketSystemCore.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> ReleaseSeat(int screeningId, int rowNumber, int seatNumber, string returnUrl = null)
+        public async Task<IActionResult> ReleaseSeat(int screeningId, int rowNumber, int seatNumber, string? returnUrl = null)
         {
             var userId = _userManager.GetUserId(User);
             if (userId == null)
@@ -152,14 +152,46 @@ namespace CinemaTicketSystemCore.Controllers
             if (reservation == null)
             {
                 TempData["ErrorMessage"] = "Reservation not found or you don't have permission to cancel it.";
-                return Redirect(returnUrl ?? Url.Action("RoomView", new { id = screeningId }));
+                var redirectUrl = returnUrl ?? Url.Action("RoomView", new { id = screeningId }) ?? "/";
+                return Redirect(redirectUrl);
             }
 
             _db.SeatReservations.Remove(reservation);
             await _db.SaveChangesAsync();
 
             TempData["SuccessMessage"] = $"Seat {rowNumber}-{seatNumber} reservation cancelled.";
-            return Redirect(returnUrl ?? Url.Action("RoomView", new { id = screeningId }));
+            var finalRedirectUrl = returnUrl ?? Url.Action("RoomView", new { id = screeningId }) ?? "/";
+            return Redirect(finalRedirectUrl);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CancelAll(int screeningId, string? returnUrl = null)
+        {
+            var userId = _userManager.GetUserId(User);
+            if (userId == null)
+            {
+                return Unauthorized();
+            }
+
+            // Get all user reservations for this screening
+            var reservations = await _db.SeatReservations
+                .Where(sr => sr.ScreeningId == screeningId && sr.UserId == userId)
+                .ToListAsync();
+
+            if (!reservations.Any())
+            {
+                TempData["ErrorMessage"] = "No reservations found to cancel.";
+                var redirectUrl = returnUrl ?? Url.Action("MyReservations", "Home") ?? "/";
+                return Redirect(redirectUrl);
+            }
+
+            _db.SeatReservations.RemoveRange(reservations);
+            await _db.SaveChangesAsync();
+
+            TempData["SuccessMessage"] = $"All reservations for this screening have been cancelled.";
+            var finalRedirectUrl = returnUrl ?? Url.Action("MyReservations", "Home") ?? "/";
+            return Redirect(finalRedirectUrl);
         }
     }
 }
