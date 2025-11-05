@@ -86,7 +86,11 @@ echo ""
 echo "Step 4: Updating appsettings.json..."
 echo ""
 
-cd /home/aayush/egui1/CinemaTicketSystemCore
+# Get the directory where this script is located
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
+
+cd "$PROJECT_DIR"
 
 # Update connection string
 if [ -f "appsettings.json" ]; then
@@ -102,10 +106,9 @@ echo "Setup Complete!"
 echo "=========================================="
 echo ""
 echo "Next steps:"
-echo "  1. cd /home/aayush/egui1/CinemaTicketSystemCore"
-echo "  2. dotnet restore"
-echo "  3. dotnet build"
-echo "  4. dotnet run"
+echo "  1. dotnet restore"
+echo "  2. dotnet build"
+echo "  3. dotnet run"
 echo ""
 echo "Default login:"
 echo "  Admin: admin@cinema.com / Admin@123"

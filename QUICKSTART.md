@@ -5,7 +5,6 @@
 Run the setup script to automatically configure MySQL with password 'coolpass':
 
 ```bash
-cd /home/aayush/egui1/CinemaTicketSystemCore
 ./scripts/setup-mysql.sh
 ```
 
@@ -53,7 +52,6 @@ Edit `appsettings.json` and change the connection string to:
 After setup:
 
 ```bash
-cd /home/aayush/egui1/CinemaTicketSystemCore
 dotnet restore
 dotnet build
 dotnet run

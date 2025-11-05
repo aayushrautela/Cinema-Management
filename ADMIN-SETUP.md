@@ -13,7 +13,6 @@ This account is created automatically when you first run the application.
 
 1. Run the application:
    ```bash
-   cd /home/aayush/egui1/CinemaTicketSystemCore
    dotnet run
    ```
 
@@ -61,7 +60,6 @@ WHERE u.Email = 'user@example.com';
 I've created a helper script:
 
 ```bash
-cd /home/aayush/egui1/CinemaTicketSystemCore
 chmod +x scripts/create-admin.sh
 ./scripts/create-admin.sh user@example.com
 ```

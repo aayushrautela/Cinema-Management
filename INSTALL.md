@@ -34,7 +34,6 @@ dotnet --version
 Run the automated installation script:
 
 ```bash
-cd /home/aayush/egui1/CinemaTicketSystemCore
 sudo ./scripts/install-dotnet.sh
 ```
 
@@ -65,7 +64,6 @@ dotnet --version
 Or use the manual script:
 
 ```bash
-cd /home/aayush/egui1/CinemaTicketSystemCore
 ./scripts/install-dotnet-manual.sh
 ```
 
@@ -90,7 +88,6 @@ dotnet --version
 Once .NET SDK is installed, run:
 
 ```bash
-cd /home/aayush/egui1/CinemaTicketSystemCore
 dotnet restore
 dotnet build
 dotnet run

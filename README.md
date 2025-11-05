@@ -50,7 +50,6 @@ sudo mysql_secure_installation
 Alternatively, use the provided setup script:
 
 ```bash
-cd CinemaTicketSystemCore
 ./scripts/setup-mysql-simple.sh
 ```
 
@@ -72,7 +71,6 @@ The `SeedTestData` setting controls whether test data (users and screenings) is 
 ### 4. Build and Run
 
 ```bash
-cd CinemaTicketSystemCore
 dotnet restore
 dotnet build
 dotnet run
@@ -111,7 +109,7 @@ If `SeedTestData` is set to `true`, additional test users and screenings will be
 ## Project Structure
 
 ```
-CinemaTicketSystemCore/
+.
 ├── Controllers/          # MVC Controllers
 ├── Models/              # Data models and ViewModels
 ├── Views/               # Razor views
@@ -120,6 +118,7 @@ CinemaTicketSystemCore/
 ├── wwwroot/             # Static files (CSS, JS)
 ├── scripts/             # Setup scripts
 ├── Program.cs           # Application entry point
+├── CinemaTicketSystemCore.csproj  # Project file
 └── appsettings.json     # Configuration
 ```
 

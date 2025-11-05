@@ -69,7 +69,6 @@ sudo systemctl start mysqld
 sudo systemctl enable mysqld
 
 # Run setup script
-cd /home/aayush/egui1/CinemaTicketSystemCore
 ./scripts/setup-mysql.sh
 ```
 
@@ -103,7 +102,6 @@ Edit `appsettings.json`:
 ## Step 4: Run the Application
 
 ```bash
-cd /home/aayush/egui1/CinemaTicketSystemCore
 dotnet restore
 dotnet build
 dotnet run
@@ -149,7 +147,6 @@ dotnet build
 # Full setup (run all commands)
 sudo dnf install -y dotnet-sdk-8.0 mysql-server
 sudo systemctl start mysqld
-cd /home/aayush/egui1/CinemaTicketSystemCore
 ./scripts/setup-mysql.sh
 dotnet restore
 dotnet build
