@@ -55,7 +55,7 @@ namespace CinemaTicketSystemCore.Controllers
                     await _signInManager.SignInAsync(user, isPersistent: false);
                     return RedirectToAction("Index", "Home");
                 }
-                // Filter out duplicate username errors since we only use email
+                // Combine duplicate username/email errors into single message (email = username)
                 AddErrorsFiltered(result);
             }
             return View(model);
@@ -106,6 +106,8 @@ namespace CinemaTicketSystemCore.Controllers
                 return NotFound();
             }
 
+            // Load user with current LockVersion for optimistic concurrency control
+            // LockVersion changes on each update, preventing parallel edits from overwriting each other
             var user = await _db.Users.FindAsync(userId);
             if (user == null)
             {
@@ -119,7 +121,7 @@ namespace CinemaTicketSystemCore.Controllers
                 Surname = user.Surname,
                 PhoneNumber = user.PhoneNumber,
                 Email = user.Email ?? string.Empty,
-                LockVersion = user.LockVersion
+                LockVersion = user.LockVersion  // Send to client for concurrency check
             };
 
             return View(viewModel);
@@ -134,13 +136,15 @@ namespace CinemaTicketSystemCore.Controllers
             {
                 try
                 {
+                    // Reload user from database to get latest state (prevents stale data in parallel scenarios)
+                    // Critical: User may have been modified/deleted by another admin/user between GET and POST
                     var user = await _db.Users.FindAsync(model.Id);
                     if (user == null)
                     {
-                        return NotFound();
+                        return NotFound();  // User deleted by another process
                     }
 
-                    // Check if user is editing their own profile or is admin
+                    // Authorization: users can only edit their own profile, admins can edit others
                     var currentUserId = _userManager.GetUserId(User);
                     var isAdmin = User.IsInRole("Admin");
                     if (user.Id != currentUserId && !isAdmin)
@@ -148,7 +152,7 @@ namespace CinemaTicketSystemCore.Controllers
                         return Forbid();
                     }
 
-                    // Prevent admins from editing other admins
+                    // Prevent admins from editing other admins (security restriction)
                     if (isAdmin && user.Id != currentUserId)
                     {
                         var targetIsAdmin = await _userManager.IsInRoleAsync(user, "Admin");
@@ -158,36 +162,44 @@ namespace CinemaTicketSystemCore.Controllers
                         }
                     }
 
-                    // Optimistic concurrency check
+                    // Phase 1: Client-side optimistic concurrency check (before DB write)
+                    // Compare LockVersion from form submission with current DB value
+                    // If different, another user/admin modified this record concurrently
                     if (user.LockVersion != null && model.LockVersion != null)
                     {
                         if (!user.LockVersion.SequenceEqual(model.LockVersion))
                         {
+                            // Parallel edit detected: show error and refresh with latest data
                             ModelState.AddModelError("", "The record you attempted to edit was modified by another user. Please refresh and try again.");
                             model.LockVersion = user.LockVersion;
                             return View(model);
                         }
                     }
 
+                    // Update user fields (email/username cannot be changed)
                     user.Name = model.Name;
                     user.Surname = model.Surname;
                     user.PhoneNumber = model.PhoneNumber;
-                    // Do NOT allow changing email/username here; they remain as-registered
 
                     _db.Entry(user).State = EntityState.Modified;
+                    // Phase 2: Database-level concurrency check during SaveChanges
+                    // EF Core will throw DbUpdateConcurrencyException if LockVersion changed
                     await _db.SaveChangesAsync();
 
                     return RedirectToAction("Index", "Home");
                 }
                 catch (DbUpdateConcurrencyException ex)
                 {
+                    // Parallel edit detected at database level (race condition between check and save)
+                    // Another user/admin saved changes between our LockVersion check and SaveChanges
+                    // Reload current database values to show user the latest data
                     ModelState.AddModelError("", "The record you attempted to edit was modified by another user. Please refresh and try again.");
                     var entry = ex.Entries.Single();
                     var databaseValues = await entry.GetDatabaseValuesAsync();
                     if (databaseValues != null)
                     {
                         var databaseUser = (ApplicationUser)databaseValues.ToObject();
-                        model.LockVersion = databaseUser.LockVersion;
+                        model.LockVersion = databaseUser.LockVersion;  // Update with latest LockVersion
                     }
                     return View(model);
                 }
@@ -199,6 +211,8 @@ namespace CinemaTicketSystemCore.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> EditUser(string id)
         {
+            // Admin editing another user: load with LockVersion for concurrency protection
+            // Multiple admins can edit users simultaneously, so concurrency checks are critical
             var user = await _db.Users.FindAsync(id);
             if (user == null)
             {
@@ -212,7 +226,7 @@ namespace CinemaTicketSystemCore.Controllers
                 Surname = user.Surname,
                 PhoneNumber = user.PhoneNumber,
                 Email = user.Email ?? string.Empty,
-                LockVersion = user.LockVersion
+                LockVersion = user.LockVersion  // Required for parallel edit detection
             };
 
             return View("EditProfile", viewModel);
@@ -234,11 +248,11 @@ namespace CinemaTicketSystemCore.Controllers
             }
         }
 
+        // Combines duplicate username/email errors (email = username in this app)
         private void AddErrorsFiltered(IdentityResult result)
         {
             foreach (var error in result.Errors)
             {
-                // Combine username and email errors into a single email error
                 if (error.Code == "DuplicateUserName" || error.Code == "DuplicateEmail")
                 {
                     ModelState.AddModelError("Email", "This email address is already registered.");

@@ -5,9 +5,10 @@ namespace CinemaTicketSystemCore.Data
 {
     public static class DatabaseInitializer
     {
+        // Seeds database with essential data (cinemas, admin) and optionally test data
         public static void Seed(ApplicationDbContext context, UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager, bool seedTestData = false)
         {
-            // Seed Cinemas
+            // Seed basic cinema structure (always created)
             if (!context.Cinemas.Any())
             {
                 context.Cinemas.AddRange(new[]
@@ -27,7 +28,7 @@ namespace CinemaTicketSystemCore.Data
                 roleManager.CreateAsync(new IdentityRole("Admin")).Wait();
             }
 
-            // Create default admin user if no users exist
+            // Create default admin user (always created for first run)
             if (!context.Users.Any())
             {
                 var adminUser = new ApplicationUser
@@ -45,7 +46,7 @@ namespace CinemaTicketSystemCore.Data
                 }
             }
 
-            // Only seed test data if enabled
+            // Test data seeding - controlled by SeedTestData config setting
             if (seedTestData)
             {
                 // Create test users (10 regular users + 2 admins)
@@ -67,9 +68,9 @@ namespace CinemaTicketSystemCore.Data
                     ("admin002@test.com", "Admin@123", "Admin", "002", "2222222222", true)
                 };
 
+                // Create test users only if they don't already exist (prevents duplicates)
                 foreach (var (email, password, name, surname, phone, isAdmin) in testUsers)
                 {
-                    // Check if user already exists
                     if (userManager.FindByEmailAsync(email).Result == null)
                     {
                         var user = new ApplicationUser
@@ -89,11 +90,11 @@ namespace CinemaTicketSystemCore.Data
                     }
                 }
 
-                // Create test screenings
+                // Create test screenings across all cinemas (only if no screenings exist)
                 var cinemas = context.Cinemas.ToList();
                 if (cinemas.Any() && !context.Screenings.Any())
                 {
-                    var baseDate = DateTime.Now.Date.AddDays(1); // Start from tomorrow
+                    var baseDate = DateTime.Now.Date.AddDays(1); // Tomorrow
                     var screenings = new List<Screening>();
                     
                     // Screenings for Grand Cinema (Id = 1)

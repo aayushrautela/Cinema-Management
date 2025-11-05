@@ -8,12 +8,12 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
-// Configure Entity Framework with MySQL
+// Configure EF Core with MySQL
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
 
-// Configure Identity
+// Configure ASP.NET Identity for authentication
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 {
     // Password settings
@@ -72,13 +72,13 @@ using (var scope = app.Services.CreateScope())
         var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
         var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
         
-        // Ensure database is created
+        // Create database if it doesn't exist
         context.Database.EnsureCreated();
         
-        // Check if test data should be seeded
+        // Read SeedTestData setting from appsettings.json (defaults to false)
         var seedTestData = builder.Configuration.GetValue<bool>("SeedTestData", false);
         
-        // Seed data
+        // Seed essential data + optional test data
         DatabaseInitializer.Seed(context, userManager, roleManager, seedTestData);
     }
     catch (Exception ex)

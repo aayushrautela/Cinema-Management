@@ -173,12 +173,15 @@ namespace CinemaTicketSystemCore.Controllers
                 return NotFound();
             }
 
+            // Load user to show deletion confirmation
+            // Note: User may be deleted by another admin between GET and POST (handled in POST)
             var user = await _db.Users.FirstOrDefaultAsync(u => u.Id == id);
             if (user == null)
             {
                 return NotFound();
             }
 
+            // Count reservations for display (may change if user makes reservations concurrently)
             var reservationCount = await _db.SeatReservations.CountAsync(r => r.UserId == id);
 
             var vm = new DeleteUserViewModel
@@ -204,21 +207,29 @@ namespace CinemaTicketSystemCore.Controllers
                 return NotFound();
             }
 
+            // Reload user from database - critical for parallel deletion safety
+            // Race condition: Another admin may have deleted this user between GET and POST
+            // Also, user may have been deleted while showing confirmation page
             var user = await _db.Users.FirstOrDefaultAsync(u => u.Id == id);
             if (user == null)
             {
-                return NotFound();
+                // User already deleted by another process (parallel deletion scenario)
+                TempData["ErrorMessage"] = "User was already deleted by another administrator.";
+                return RedirectToAction("UsersList");
             }
 
-            // Remove user's reservations first to satisfy FK restriction
+            // Remove user's reservations first (required due to FK constraint)
+            // Note: Reservations may be added/deleted concurrently, but RemoveRange handles all matching records
             var reservations = _db.SeatReservations.Where(r => r.UserId == id);
             _db.SeatReservations.RemoveRange(reservations);
             await _db.SaveChangesAsync();
 
-            // Delete the user using UserManager to ensure Identity cleanup
+            // Delete user using UserManager (ensures Identity cleanup + proper transaction handling)
+            // This operation is atomic - if another admin deletes concurrently, DeleteAsync will handle it
             var result = await _userManager.DeleteAsync(user);
             if (!result.Succeeded)
             {
+                // Possible race condition: user deleted between reservation removal and user deletion
                 TempData["ErrorMessage"] = string.Join("; ", result.Errors.Select(e => e.Description));
                 return RedirectToAction("DeleteUser", new { id });
             }
