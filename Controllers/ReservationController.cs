@@ -95,7 +95,7 @@ namespace CinemaTicketSystemCore.Controllers
             // Create reservation with conflict handling
             try
             {
-                var userId = _userManager.GetUserId(User);
+                var userId = _userManager.GetUserId(User);  //Gets the user id from the user manager
                 if (userId == null)
                 {
                     return Unauthorized();
@@ -109,8 +109,8 @@ namespace CinemaTicketSystemCore.Controllers
                     SeatNumber = seatNumber,
                     ReservedAt = DateTime.Now
                 };
-
-                _db.SeatReservations.Add(reservation);
+                //Sends data to the database
+                _db.SeatReservations.Add(reservation);  //Adds the reservation to entity change tracker 
                 await _db.SaveChangesAsync();
 
                 TempData["SuccessMessage"] = $"Seat {rowNumber}-{seatNumber} reserved successfully.";

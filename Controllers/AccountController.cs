@@ -106,7 +106,7 @@ namespace CinemaTicketSystemCore.Controllers
                 return NotFound();
             }
 
-            // Load user with current LockVersion for optimistic concurrency control
+            // Load user withptimistic concurrency control
             // LockVersion changes on each update, preventing parallel edits from overwriting each other
             var user = await _db.Users.FindAsync(userId);
             if (user == null)
@@ -186,7 +186,14 @@ namespace CinemaTicketSystemCore.Controllers
                     // EF Core will throw DbUpdateConcurrencyException if LockVersion changed
                     await _db.SaveChangesAsync();
 
-                    return RedirectToAction("Index", "Home");
+                    TempData["SuccessMessage"] = "User profile updated successfully.";
+                    
+                    // If admin is editing another user, redirect to users list; otherwise back to edit profile
+                    if (isAdmin && user.Id != currentUserId)
+                    {
+                        return RedirectToAction("UsersList", "Admin");
+                    }
+                    return RedirectToAction("EditProfile");
                 }
                 catch (DbUpdateConcurrencyException ex)
                 {

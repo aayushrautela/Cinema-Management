@@ -45,7 +45,6 @@ namespace CinemaTicketSystemCore.Data
                 .OnDelete(DeleteBehavior.Restrict);
 
             // Configure concurrency token for ApplicationUser
-            // For MySQL, use IsConcurrencyToken instead of IsRowVersion
             modelBuilder.Entity<ApplicationUser>()
                 .Property(u => u.LockVersion)
                 .IsConcurrencyToken();
