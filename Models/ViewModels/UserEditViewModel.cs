@@ -25,6 +25,7 @@ namespace CinemaTicketSystemCore.Models.ViewModels
         [Display(Name = "Email")]
         public string Email { get; set; } = string.Empty;
 
+        [Timestamp]
         public byte[]? LockVersion { get; set; }
     }
 }
